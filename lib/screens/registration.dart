@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
-
 class RegistrationPage extends StatefulWidget {
   @override
   _RegistrationPageState createState() => _RegistrationPageState();
 }
-
 
 class _RegistrationPageState extends State<RegistrationPage> {
   final _formKey = GlobalKey<FormState>();
@@ -19,41 +17,45 @@ class _RegistrationPageState extends State<RegistrationPage> {
   String? _cigType;
   double? _nicotine;
 
-
   Future<void> _saveData() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      final DateTime registrationDate = DateTime.now().toUtc(); // Data di registrazione
-      String formattedDate = registrationDate.toIso8601String();
-
-
       SharedPreferences prefs = await SharedPreferences.getInstance();
-
 
       // Recupera i dati degli utenti esistenti
       String? usersData = prefs.getString('users');
-      Map<String, dynamic> users = usersData != null ? json.decode(usersData) : {};
+      Map<String, dynamic> users =
+          usersData != null ? json.decode(usersData) : {};
 
+      // Controlla se l'account name già esiste
+      if (users.containsKey(_accountName)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('This account name already exists.'),
+          ),
+        );
+      } else {
+        final DateTime registrationDate = DateTime.now().toUtc();
+        String formattedDate = registrationDate.toIso8601String();
 
-      // Aggiungi i dati del nuovo utente
-      users[_accountName!] = {
-        'FirstName': _firstName,
-        'LastName': _lastName,
-        'Password': _password,
-        'CigarettesPerDay': _cigPerDay,
-        'CigaretteType': _cigType,
-        'Nicotine': _nicotine,
-        'registrationDate': formattedDate, // Salva la data di registrazione
-      };
+        // Aggiungi i dati del nuovo utente
+        users[_accountName!] = {
+          'FirstName': _firstName,
+          'LastName': _lastName,
+          'Password': _password,
+          'CigarettesPerDay': _cigPerDay,
+          'CigaretteType': _cigType,
+          'Nicotine': _nicotine,
+          'registrationDate': formattedDate,
+        };
 
-
-      // Salva i dati aggiornati
-      await prefs.setString('users', json.encode(users));
-      print('User data saved: ${users[_accountName!]}'); // Debug
-      Navigator.pop(context);
+        // Salva i dati aggiornati
+        await prefs.setString('users', json.encode(users));
+        print('User data saved: ${users[_accountName!]}');
+        Navigator.pop(context);
+      }
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +120,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 },
               ),
               TextFormField(
-                decoration: InputDecoration(labelText: 'Number of cigarettes per day'),
+                decoration:
+                    InputDecoration(labelText: 'Number of cigarettes per day'),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -132,7 +135,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
               ),
               DropdownButtonFormField<String>(
                 decoration: InputDecoration(labelText: 'Cigarette type'),
-                items: <String>['Light', 'Regular', 'Heavy'].map((String value) {
+                items:
+                    <String>['Light', 'Regular', 'Heavy'].map((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
                     child: Text(value),
