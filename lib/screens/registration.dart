@@ -17,6 +17,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
   String? _cigType;
   double? _nicotine;
 
+  // Function to validate if the password has at least one number
+  bool _hasNumber(String value) {
+    return value
+        .contains(RegExp(r'[0-9]')); // Check if password contains a digit
+  }
+
   Future<void> _saveData() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
@@ -112,6 +118,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Enter your password';
+                  } else if (value.length < 5) {
+                    return 'Password must have at least 5 characters';
+                  } else if (!_hasNumber(value)) {
+                    return 'Password must have at least one number';
                   }
                   return null;
                 },
