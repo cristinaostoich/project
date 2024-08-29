@@ -11,25 +11,12 @@ import 'delete_account_page.dart';
 
 
 
-
-
-
-
 class ProfilePage extends StatefulWidget {
   final String accountName;
 
 
 
-
-
-
-
-
   ProfilePage({required this.accountName});
-
-
-
-
 
 
 
@@ -47,8 +34,7 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   String? _cigaretteType;
-  double? _nicotine;
-  String? _registrationDate;
+  
 
 
 
@@ -86,8 +72,6 @@ class _ProfilePageState extends State<ProfilePage> {
       if (users.containsKey(accountName)) {
         setState(() {
           _cigaretteType = users[accountName]['CigaretteType'];
-          _nicotine = users[accountName]['Nicotine'];
-          _registrationDate = users[accountName]['registrationDate'];
         });
       }
     }
@@ -152,12 +136,12 @@ class _ProfilePageState extends State<ProfilePage> {
     int hourlyCount = prefs.getInt(hourlyKey) ?? 0;
     hourlyCount++;
     double hourlyNicotine = prefs.getDouble(hourlyNicotineKey) ?? 0.0;
-    hourlyNicotine += _nicotine ?? 0.0;
+    
 
 
     Provider.of<CigaretteCounter>(context, listen: false).updateHourlyCount(hourlyCount, hourlyNicotine);
     prefs.setInt(hourlyKey, hourlyCount);
-    prefs.setDouble(hourlyNicotineKey, hourlyNicotine);
+    
 
 
     // Aggiorna la UI per riflettere il nuovo valore del contatore orario
@@ -226,11 +210,6 @@ class _ProfilePageState extends State<ProfilePage> {
       // Decrementa il contatore orario
       if (hourlyCount > 0) {
         hourlyCount--;
-        if (hourlyNicotine >= (_nicotine ?? 0.0)) {
-          hourlyNicotine -= (_nicotine ?? 0.0);
-        } else {
-          hourlyNicotine = 0.0;
-        }
         Provider.of<CigaretteCounter>(context, listen: false).updateHourlyCount(hourlyCount, hourlyNicotine);
         prefs.setInt(hourlyKey, hourlyCount);
         prefs.setDouble(hourlyNicotineKey, hourlyNicotine);
@@ -341,16 +320,31 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     final cigaretteProvider = Provider.of<CigaretteCounter>(context);
     return Scaffold(
+      backgroundColor: Colors.lightGreenAccent, // Light green background
       appBar: AppBar(title: Text('Profile')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text('Account Name: ${widget.accountName}'),
-            Text('Cigarette Type: $_cigaretteType'),
-            Text('Nicotine: $_nicotine'),
-            SizedBox(height: 20),
-            Text('Registration Date: ${_registrationDate != null ? DateTime.parse(_registrationDate!).toLocal().toString() : 'Not Available'}'),
+            Text(
+              'Hi ${widget.accountName}!',
+              style: TextStyle(
+                fontSize: 32, 
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              'Cigarette Type: $_cigaretteType',
+              style: TextStyle(
+                fontSize: 16, 
+              ),
+            ),
+            Text(
+              'What do you want to do?',
+              style: TextStyle(
+                fontSize: 20, 
+              ),
+            ),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
@@ -360,69 +354,77 @@ class _ProfilePageState extends State<ProfilePage> {
                     builder: (context) => ModifyPage(
                       accountName: widget.accountName,
                       cigaretteType: _cigaretteType!,
-                      nicotine: _nicotine!,
+                      nicotine: 0.0,
                     ),
                   ),
                 ).then((_) {
                   _loadUserData();
                 });
               },
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15), 
+                textStyle: TextStyle(fontSize: 20), 
+              ),
               child: Text('Modify Profile'),
             ),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                GestureDetector(
-                  onTap: () {
-                    _decrementCigaretteCount();
-                  },
-                  child: Container(
-                    padding: EdgeInsets.all(0),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.grey, width: 2),
-                    ),
-                    child: Icon(
-                      Icons.remove,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-                SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: () {
-                    _incrementCigaretteCount();
-                  },
-                  child: Text('Add a Cigarette'),
-                ),
-                SizedBox(width: 20),
-                Text(
-                  '${cigaretteProvider.cigarettesSmokedToday}',
-                  style: TextStyle(fontSize: 24),
-                ),
-                SizedBox(width: 20),
-                Text(
-                  'Hourly: ${cigaretteProvider.hourlyCigarettesSmoked}',
-                  style: TextStyle(fontSize: 24),
-                ),
-              ],
+            
+
+            SizedBox(height: 28),
+          ElevatedButton(
+            onPressed: () {
+              _incrementCigaretteCount();
+            },
+            style: ElevatedButton.styleFrom(
+              padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15), 
+              textStyle: TextStyle(fontSize: 20), 
             ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => Plots(accountName: widget.accountName),
-                  ),
-                );
-              },
-              child: Text('Your Progress'),
+            child: Text('Add a Cigarette'),
+          ),
+          SizedBox(height: 10), 
+          GestureDetector(
+            onTap: () {
+              _decrementCigaretteCount();
+            },
+            child: Container(
+              padding: EdgeInsets.all(0), 
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.grey, width: 3),
+              ),
+              child: Icon(
+                Icons.remove,
+                color: Colors.grey,
+                size: 30, 
+              ),
             ),
-          ],
-        ),
+          ),
+
+          SizedBox(height: 28),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(                    builder: (context) => Plots(accountName: widget.accountName),
+                 ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15), 
+              textStyle: TextStyle(fontSize: 20), 
+            ),
+             child: Text('Your Progress'),
+          ),
+
+          SizedBox(height: 28),
+          Text(
+            'Cigarettes Smoked Today: ${cigaretteProvider.cigarettesSmokedToday}',              
+              style: TextStyle(
+              fontSize: 20, 
+            ),
+          ),
+        ],
       ),
+    ),
       bottomNavigationBar: Padding(
         padding: EdgeInsets.all(16),
         child: Row(
@@ -430,24 +432,21 @@ class _ProfilePageState extends State<ProfilePage> {
           children: <Widget>[
             ElevatedButton(
               onPressed: _showDeleteConfirmation,
-              child: Icon(Icons.delete),
+              child: Icon(Icons.delete, size: 30), 
               style: ElevatedButton.styleFrom(
                 shadowColor: Colors.red,
-                padding: EdgeInsets.symmetric(horizontal: 20),
+                padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15), 
               ),
             ),
             ElevatedButton(
               onPressed: _logout,
-              child: Icon(Icons.logout),
+              child: Icon(Icons.logout, size: 30), 
               style: ElevatedButton.styleFrom(
                 shadowColor: Colors.blue,
-                padding: EdgeInsets.symmetric(horizontal: 20),
+                padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15), 
               ),
             ),
-            Text(
-                  'Hourly Nicotine: ${cigaretteProvider.hourlyNicotine.toStringAsFixed(2)} mg',
-                  style: TextStyle(fontSize: 18),
-                ),
+            
           ],
         ),
       ),
