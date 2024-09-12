@@ -7,7 +7,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       // Set background color of the home page
-      backgroundColor: Colors.lightGreenAccent, // Light green background
+      backgroundColor: Color.fromARGB(255, 79, 149, 240), // Light green background
 
       appBar: AppBar(
         title: Center(
@@ -15,11 +15,12 @@ class HomePage extends StatelessWidget {
             'Welcome!',
             style: TextStyle(
               fontSize: 42, // Bigger font size for the title
+              color: Colors.white,
             ),
           ),
         ),
         backgroundColor:
-            Colors.lightGreenAccent, // Same background color as the body
+          Color.fromARGB(255, 79, 149, 240), // Same background color as the body
         elevation: 0, // Remove shadow for a cleaner look
       ),
       body: Center(
@@ -32,9 +33,10 @@ class HomePage extends StatelessWidget {
               height: 60,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  side: BorderSide(color: Colors.black, width: 2), // Dark edges
+                  backgroundColor: Color.fromARGB(255, 118, 174, 249),
+                  side: BorderSide(color: Color.fromARGB(255, 35, 99, 150), width: 1), // Dark edges
                   textStyle: TextStyle(fontSize: 28),
-                  foregroundColor: Colors.green[900], // Dark green text color
+                  foregroundColor: Color.fromARGB(255, 25, 73, 113),
                 ),
                 child: Text('Login'),
                 onPressed: () {
@@ -52,11 +54,12 @@ class HomePage extends StatelessWidget {
               height: 60,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  side: BorderSide(color: Colors.black, width: 2), // Dark edges
+                  backgroundColor: Color.fromARGB(255, 118, 174, 249),
+                  side: BorderSide(color: Color.fromARGB(255, 35, 99, 150), width: 1), // Dark edges
                   textStyle: TextStyle(fontSize: 28),
-                  foregroundColor: Colors.green[900], // Dark green text color
+                  foregroundColor: Color.fromARGB(255, 25, 73, 113), // Dark green text color
                 ),
-                child: Text('Register'),
+                child: Text('Sign up'),
                 onPressed: () {
                   Navigator.push(
                     context,
