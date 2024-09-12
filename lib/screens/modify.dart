@@ -79,10 +79,23 @@ class _ModifyPageState extends State<ModifyPage> {
     final TextStyle smallTextStyle = TextStyle(fontSize: 16);
 
     return Scaffold(
-      backgroundColor: Colors.lightGreenAccent,
+      backgroundColor: Color.fromARGB(255, 79, 149, 240),
       appBar: AppBar(
-        title: Text('Your Profile', style: largeTextStyle),
+        title: Text(
+          'Your Profile',
+          //textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 30, // Bigger font size for the title
+            color: Colors.white,
+            //fontWeight: FontWeight.bold, // Optional: Make the text bold
+          ),
+        ),
+        backgroundColor:
+            Color.fromARGB(255, 79, 149, 240), // Set the same background color for AppBar
+        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.white,),
       ),
+
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Center(
@@ -93,19 +106,38 @@ class _ModifyPageState extends State<ModifyPage> {
               if (_fullName != null && _registrationDate != null)
                 Column(
                   children: [
-                    Text('Full name: $_fullName', style: largeTextStyle),
-                    Text('Start of your journey: $_registrationDate',
-                        style: largeTextStyle),
-                    SizedBox(height: 24),
+                    Text(
+                      '$_fullName',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      )),
+                    Text('your journey has started on $_registrationDate',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                        )),
+                    SizedBox(height: 38),
                   ],
                 ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Modify the cigarette type:', style: smallTextStyle),
-                  SizedBox(width: 16), // Spacer between text and dropdown
+                  Text(
+                    'Modify cigarette type:',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                    )),
+                  SizedBox(width: 18), // Spacer between text and dropdown
                   DropdownButton<String>(
                     value: _selectedCigaretteType,
+                    dropdownColor: Color.fromARGB(255, 118, 174, 249),
+                    icon: Icon(
+                      Icons.arrow_drop_down, 
+                      color: Colors.white, // Imposta il colore della freccetta su bianco
+                    ),
                     onChanged: (newValue) {
                       setState(() {
                         _selectedCigaretteType = newValue;
@@ -122,17 +154,34 @@ class _ModifyPageState extends State<ModifyPage> {
                         .map((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
-                        child: Text(value, style: smallTextStyle),
+                        child: Text(
+                          value,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                          )),
                       );
                     }).toList(),
                   ),
                 ],
               ),
-              SizedBox(height: 20),
-              Text('Selected Nicotine: $_nicotine mg', style: smallTextStyle),
+              SizedBox(height: 15),
+              Text(
+                'Selected Nicotine: $_nicotine mg',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                )),
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _saveChanges,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color.fromARGB(255, 118, 174, 249),
+                  side: BorderSide(color: Color.fromARGB(255, 35, 99, 150), width: 1), // Dark edges
+                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15), 
+                  textStyle: TextStyle(fontSize: 20), //era 20
+                  foregroundColor: Color.fromARGB(255, 25, 73, 113), // Dark green text color
+                ),
                 child: Text('Save Changes', style: smallTextStyle),
               ),
             ],
