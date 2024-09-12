@@ -1,6 +1,7 @@
 import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:flutter/material.dart';
-import 'package:progetto/charts/nicotine_level.dart'; // Assicurati che il percorso sia corretto
+import 'package:progetto/charts/plot_creation.dart';
+//import 'package:progetto/charts/nicotine_level.dart';
 
 
 class NicotineChart extends StatelessWidget {
