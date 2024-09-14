@@ -1,542 +1,346 @@
+//import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:provider/provider.dart';
 import 'cigarette_counter.dart';
-import 'modify.dart';
-import 'plots.dart';
-import 'homePage.dart';
-import 'delete_account_page.dart';
+import 'package:progetto/charts/plot_creation.dart';
 
-class ProfilePage extends StatefulWidget {
+
+class Plots extends StatefulWidget {
   final String accountName;
 
-  ProfilePage({required this.accountName});
+
+  Plots({required this.accountName});
+
 
   @override
-  _ProfilePageState createState() => _ProfilePageState();
+  _PlotsState createState() => _PlotsState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
-  String? _cigaretteType;
-  double? _nicotine;
-  String? _registrationDate;
-  String? _firstName;
+
+class _PlotsState extends State<Plots> {
+  DateTime? registrationDate;
+  List<NicotineLevel> data = [];
+  List<HourlyNicotineLevel> hourlyData = [];
+  List<HourlyNicotineLevel> dailyData = [];
+  int _cigarettesPerDay = 0;
+  int threshold = 0;
+  bool isLoading = true;
+  double nicotineSmokedToday = 0.0; //questa variabile va bene e non va modificata nel resto del codice
+  double _nicotine = 0.0;
+  double nicotineSmokedThisHour = 0.0;
+  double dailyNicotineTarget = 0.0;
+
 
   @override
   void initState() {
     super.initState();
-    _loadUserData();
-    _loadCigarettesSmokedToday();
-    _loadHourlyNicotineData();
-    _checkAndResetHourlyCounter();
-    _checkAndResetDailyCounter();
+    _loadRegistrationData();
+
+    ////////////////RIMETTI IN CASO/////////////////
+    //Aggiorna i contatori all'avvio della schermata
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final cigaretteCounter = Provider.of<CigaretteCounter>(context, listen: false);
+      cigaretteCounter.resetCountersIfNeeded();
+    });
   }
 
-  Future<void> _loadUserData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? accountName = prefs.getString('loggedInAccount');
+  //@override
+  //void didChangeDependencies() {
+  //  super.didChangeDependencies();
 
-    if (accountName != null) {
+    // Assicurati che i contatori siano aggiornati ogni volta che cambia lo stato
+  //  final cigaretteCounter = Provider.of<CigaretteCounter>(context, listen: false);
+  //  cigaretteCounter.resetCountersIfNeeded();
+  //}
+
+
+  Future<void> _loadRegistrationData() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
       String? usersData = prefs.getString('users');
+
+
       Map<String, dynamic> users = usersData != null ? json.decode(usersData) : {};
-
-      if (users.containsKey(accountName)) {
-        setState(() {
-          _cigaretteType = users[accountName]['CigaretteType'];
-          _nicotine = users[accountName]['Nicotine'];
-          _registrationDate = users[accountName]['registrationDate'];
-          _firstName = users[accountName]['FirstName'];
-        });
-        _loadHourlyNicotineData();
-      }
-      //print('cigarette type: $_cigaretteType');
-    }
-  }
-
-  Future<void> _loadHourlyNicotineData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String hourlyNicotineKey = _getHourlyNicotineKey();
-    double hourlyNicotine = prefs.getDouble(hourlyNicotineKey) ?? 0.0;
-    
-    String dailyNicotineKey = _getDailyNicotineKey();
-    double dailyNicotine = prefs.getDouble(dailyNicotineKey) ?? 0.0;
-     String dailyCountKey = "${widget.accountName}_dailyHCounts";
-    String? dailyCountData = prefs.getString(dailyCountKey);
-    Map<String, int> dailyCount = dailyCountData != null ? Map<String, int>.from(json.decode(dailyCountData)) : {};
-    int count = prefs.getInt(dailyCountKey) ?? 0;
+      //final cigaretteCounter = Provider.of<CigaretteCounter>(context, listen:false);
 
 
-    setState(() {
-      Provider.of<CigaretteCounter>(context, listen: false).setHourlyNicotine(hourlyNicotine);
-      Provider.of<CigaretteCounter>(context, listen: false).setDailyNicotine(dailyNicotine);
-      Provider.of<CigaretteCounter>(context, listen: false).setDailyCigarettes(count);
-
-    });
-  }
-
-  Future<void> _loadCigarettesSmokedToday() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String todayKey = _getTodayKey();
-    String dailyCountsKey = "${widget.accountName}_dailyCounts";
-    String? dailyCountsData = prefs.getString(dailyCountsKey);
-    Map<String, int> dailyCounts = dailyCountsData != null ? Map<String, int>.from(json.decode(dailyCountsData)) : {};
-    
-    int cigarettes = prefs.getInt(todayKey) ?? 0;
-    Provider.of<CigaretteCounter>(context, listen: false).setCigarettes(cigarettes);
-  }
+      if (users.containsKey(widget.accountName)) {
+        var userProfile = users[widget.accountName];
+        String? dateStr = userProfile['registrationDate'];
+        _cigarettesPerDay = userProfile['CigarettesPerDay'] ?? 0;
+        _nicotine = userProfile['Nicotine'] ?? 0.0;
+        threshold = _cigarettesPerDay; //threshold initialization
 
 
-  Future<void> _incrementCigaretteCount() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String todayKey = _getTodayKey();
-    String hourlyKey = _getHourlyKey();
-    String hourlyNicotineKey = _getHourlyNicotineKey();
-    String dailyKey = _getDailyKey();
-    String dailyNicotineKey = _getDailyNicotineKey();
-
-    int newCount = Provider.of<CigaretteCounter>(context, listen: false).cigarettesSmokedToday +1;
-    int newCountH = Provider.of<CigaretteCounter>(context, listen: false).hourlyCigarettesSmoked +1;
-    int dailyCount = Provider.of<CigaretteCounter>(context, listen: false).dailyCigarettesCount +1;
-    //print('newCount: $newCount');
-    //print('current daily count: $dailyCount'); //------> è 0
-    //print('current count H: $newCountH');
-
-
-    double hourlyNicotine = prefs.getDouble(hourlyNicotineKey) ?? 0.0;
-    double dailyNicotine = prefs.getDouble(dailyNicotineKey) ?? 0.0;
-
-    //await _recordCigaretteTime();
-
-    _saveDailyCount(newCount);
-    _checkAndResetDailyCounter();
-
-    hourlyNicotine += _nicotine ?? 0.0;
-    dailyNicotine += _nicotine ?? 0.0;
-    //print('daily nicotine: $dailyNicotine');
-
-    setState(() {
-      prefs.setInt(todayKey, newCount);
-      prefs.setInt(hourlyKey, newCountH);
-      prefs.setInt(dailyKey, dailyCount);
-      prefs.setDouble(hourlyNicotineKey, hourlyNicotine);
-      prefs.setDouble(dailyNicotineKey, dailyNicotine);
-
-      Provider.of<CigaretteCounter>(context, listen: false).incrementCigarettes();
-      Provider.of<CigaretteCounter>(context, listen: false).updateHourlyCount(newCountH, hourlyNicotine);
-      Provider.of<CigaretteCounter>(context, listen: false).updateDailyCount(dailyCount, dailyNicotine);
-    });
-
-    _saveHourlyCount(newCountH);
-    _checkAndResetHourlyCounter();
-    _checkAndResetDailyCounter();
-  }
-
-  Future<void> _decrementCigaretteCount() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String todayKey = _getTodayKey();
-    String hourlyKey = _getHourlyKey();
-    String hourlyNicotineKey = _getHourlyNicotineKey();
-    String dailyKey = _getDailyKey();
-    String dailyNicotineKey = _getDailyNicotineKey();
-
-    int currentCount = Provider.of<CigaretteCounter>(context, listen: false).cigarettesSmokedToday;
-    int currentCountH = Provider.of<CigaretteCounter>(context, listen: false).hourlyCigarettesSmoked;
-    int currentDailyCount = Provider.of<CigaretteCounter>(context, listen: false).dailyCigarettesCount;
-    print('current daily count: $currentDailyCount'); //------> è 0
-    print('current count H: $currentCountH');
-
-    double hourlyNicotine = prefs.getDouble(hourlyNicotineKey) ?? 0.0;
-    double dailyNicotine = prefs.getDouble(dailyNicotineKey) ?? 0.0;
-    //print('daily nicotine: $dailyNicotine');
-
-    if (currentCount > 0) {
-      int newCount = currentCount - 1;
-      //print('daily nicotine: $dailyNicotine');
-      //setState(() {
-      //  prefs.setInt(todayKey, newCount);
-      //  Provider.of<CigaretteCounter>(context, listen: false).setCigarettes(newCount);
-      //});
-      _saveDailyCount(newCount);
-      //_checkAndResetDailyCounter();
-      //print('daily nicotine: $dailyNicotine');
-      
-      
-      /////////VEDI SE QUESTO IF VA QUA O ALTROVE
-      if (currentDailyCount > 0) {
-        int dailyCount = currentDailyCount - 1;
-        if (dailyNicotine >= (_nicotine ?? 0.0)) {
-          dailyNicotine -= (_nicotine ?? 0.0);
+        if (dateStr != null) {
+          registrationDate = DateTime.parse(dateStr);
         } else {
-          dailyNicotine = 0.0;
+          registrationDate = DateTime.now();
         }
-        print('daily nicotine: $dailyNicotine');
-        setState(() {
-          prefs.setInt(dailyKey, dailyCount);
-          prefs.setDouble(dailyNicotineKey, dailyNicotine);
-          Provider.of<CigaretteCounter>(context, listen: false).setDailyCigarettes(dailyCount);
-          Provider.of<CigaretteCounter>(context, listen: false).setDailyNicotine(dailyNicotine);
-          Provider.of<CigaretteCounter>(context, listen: false).updateDailyCount(dailyCount, dailyNicotine);
 
-        });
-        _checkAndResetDailyCounter();
-        //print('daily nicotine: $dailyNicotine');
-      }
 
-      if (currentCountH > 0) {
-        int newCountH = currentCountH - 1;
-        if (hourlyNicotine >= (_nicotine ?? 0.0)) {
-          hourlyNicotine -= (_nicotine ?? 0.0);
-        } else {
-          hourlyNicotine = 0.0;
+        //cauculates number of days from registration
+        if (registrationDate != null) {
+          int daysSinceRegistration = DateTime.now().difference(registrationDate!).inDays;
+
+          //decreases threshold by one every 7 days from registration
+          threshold -= (daysSinceRegistration ~/ 7);
+          if (threshold < 0) threshold = 0; // threshold cannot be <0
         }
-        //print('hourlyNicotine: $hourlyNicotine');
 
-        setState(() {
-          prefs.setInt(hourlyKey, newCountH);
-          prefs.setDouble(hourlyNicotineKey, hourlyNicotine);
-          Provider.of<CigaretteCounter>(context, listen: false).setHourlyCigarettes(newCountH);
-          Provider.of<CigaretteCounter>(context, listen: false).setHourlyNicotine(hourlyNicotine);
-          Provider.of<CigaretteCounter>(context, listen: false).updateHourlyCount(newCountH, hourlyNicotine);
-
-          
-        });
-
-        _saveHourlyCount(newCountH);
-        _checkAndResetHourlyCounter();
+        await _generateChartData(users);
+        await _generateHourlyData(users);
+      } else {
+        print("User not found: ${widget.accountName}");
       }
-
-      
-
+    } catch (e) {
+      print("Error loading registration data: $e");
+    } finally {
       setState(() {
-        prefs.setInt(todayKey, newCount);
-        Provider.of<CigaretteCounter>(context, listen: false).setCigarettes(newCount);
-      
-
+        isLoading = false;
       });
     }
   }
 
-  String _getTodayKey() {
-    DateTime now = DateTime.now();
-    String accountName = widget.accountName;
-    return "${accountName}_cigarettes_${now.year}${now.month}${now.day}";
-  }
 
-  String _getHourlyKey() {
-    DateTime now = DateTime.now();
-    String accountName = widget.accountName;
-    return "${accountName}_hourly_cigarettes_${now.year}${now.month}${now.day}${now.hour}";
-  }
-
-  String _getDailyKey() {
-    DateTime now = DateTime.now();
-    String accountName = widget.accountName;
-    return "${accountName}_daily_cigarettes_${now.year}${now.month}${now.day}";
-  }
-
-  String _getHourlyNicotineKey() {
-    DateTime now = DateTime.now();
-    String accountName = widget.accountName;
-    return "${accountName}_hourly_nicotine_${now.year}${now.month}${now.day}${now.hour}";
-  }
-
-    String _getDailyNicotineKey() {
-      DateTime now = DateTime.now();
-      String accountName = widget.accountName;
-      return "${accountName}_daily_nicotine_${now.year}${now.month}${now.day}";
-    }
-
-  //Future<void> _recordCigaretteTime() async {
-  //  SharedPreferences prefs = await SharedPreferences.getInstance();
-  //  String currentKey = "${widget.accountName}_${DateTime.now().toIso8601String()}";
-  //  prefs.setInt(currentKey, 1);
-  //}
-
-  //questi metodi qua sotto magari li teniamo, ma ci sono anche in cigaretteCOunter e forse da là li posso togliere
-  Future<void> _checkAndResetHourlyCounter() async {
+  Future<void> _generateChartData(Map<String, dynamic> users) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String hourlyKey = _getHourlyKey();
-    String hourlyNicotineKey = _getHourlyNicotineKey();
-    //String dailyKey = _getDailyKey();
-    //String dailyNicotineKey = _getDailyNicotineKey();
-    String lastUpdateKey = "${widget.accountName}_lastHourlyUpdate";
-    DateTime now = DateTime.now();
-
-    DateTime lastUpdate = DateTime.parse(prefs.getString(lastUpdateKey) ?? now.toIso8601String());
-
-    if (now.difference(lastUpdate).inHours != 0) {
-      prefs.setInt(hourlyKey, 0);
-      prefs.setDouble(hourlyNicotineKey, 0.0);
-      Provider.of<CigaretteCounter>(context, listen: false).updateHourlyCount(0, 0.0);
-      prefs.setString(lastUpdateKey, now.toIso8601String());
-    }
-  }
-
-  Future<void> _checkAndResetDailyCounter() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String dailyKey = _getDailyKey();
-    String dailyNicotineKey = _getDailyNicotineKey();
-    String lastUpdateKeyDays = "${widget.accountName}_lastHourlyUpdateDays";
-    DateTime now = DateTime.now();
-
-    DateTime lastUpdateDays = DateTime.parse(prefs.getString(lastUpdateKeyDays) ?? now.toIso8601String());
-    //DateTime tomorrow = DateTime(now.year, now.month, now.day + 1);
-
-    if (now.difference(lastUpdateDays).inDays != 0) {
-      prefs.setInt(dailyKey, 0);
-      prefs.setDouble(dailyNicotineKey, 0.0);
-      Provider.of<CigaretteCounter>(context, listen: false).updateDailyCount(0, 0.0);
-      prefs.setString(lastUpdateKeyDays, now.toIso8601String());
-    }
-  }
-
-  Future<void> _saveDailyCount(int count) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String todayKey = _getTodayKey();
-    String dailyCountsKey = "${widget.accountName}_dailyHCounts";
+    String dailyCountsKey = "${widget.accountName}_dailyCounts";
     String? dailyCountsData = prefs.getString(dailyCountsKey);
     Map<String, int> dailyCounts = dailyCountsData != null ? Map<String, int>.from(json.decode(dailyCountsData)) : {};
-    dailyCounts[todayKey] = count;
-    await prefs.setString(dailyCountsKey, json.encode(dailyCounts));
+    double dailyNicotineTarget = threshold * _nicotine; // Calcola la soglia giornaliera
+
+
+    if (registrationDate != null) {
+      DateTime now = DateTime.now();
+      DateTime startDate = registrationDate!;
+      DateTime endDate = DateTime(startDate.year, startDate.month, startDate.day + _cigarettesPerDay*7);
+
+      data = [];
+
+      int totalCigarettes = 0;
+      //double nicotineSmokedToday = 0.0;
+
+      int daysToGenerate = _cigarettesPerDay * 7;
+      DateTime roundedDate = DateTime(now.year, now.month, now.day);
+
+
+      for (int i = 0; i < daysToGenerate; i++) {
+        DateTime currentDate = startDate.add(Duration(days: i));
+        String dateKey = "${widget.accountName}_cigarettes_${currentDate.year}${currentDate.month}${currentDate.day}";
+        double cigarettes = dailyCounts[dateKey]?.toDouble() ?? 0.0;
+
+        data.add(NicotineLevel(date: currentDate, level: cigarettes));
+      }
+
+      final cigaretteCounter = Provider.of<CigaretteCounter>(context, listen: false);
+      data.add(NicotineLevel(date: now, level: cigaretteCounter.cigarettesSmokedToday.toDouble()));
+      totalCigarettes += cigaretteCounter.cigarettesSmokedToday;
+      //print('totalCigarettes: $totalCigarettes');
+      //nicotineSmokedToday = totalCigarettes * _nicotine;
+      //print('nicotineSmokedToday: $nicotineSmokedToday');
+
+      //nicotineSmokedToday = totalCigarettes * _nicotine;
+      int futureDays = -(now.difference(endDate).inDays);
+
+      for (int i = 1; i <= futureDays; i++) {
+        DateTime futureDate = now.add(Duration(days: i));
+        data.add(NicotineLevel(date: futureDate, level: 0.0));
+      }
+      setState(() {
+        //will be used to show the counter in the widget
+        //this.nicotineSmokedToday = nicotineSmokedToday;
+        this.dailyNicotineTarget = dailyNicotineTarget;
+        //this.nicotineSmokedToday = nicotineSmokedToday;
+      });
+    }
   }
 
-  Future<void> _saveHourlyCount(int count) async {
+
+  Future<void> _generateHourlyData(Map<String, dynamic> users) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String hourlyKey = _getHourlyKey();
     String hourlyCountsKey = "${widget.accountName}_hourlyCounts";
     String? hourlyCountsData = prefs.getString(hourlyCountsKey);
-    Map<String, int> hourlyCounts = hourlyCountsData != null ? Map<String, int>.from(json.decode(hourlyCountsData)) : {};
-    hourlyCounts[hourlyKey] = count;
-    await prefs.setString(hourlyCountsKey, json.encode(hourlyCounts));
+    Map<String, int> hourlyCounts = hourlyCountsData != null
+        ? Map<String, int>.from(json.decode(hourlyCountsData))
+        : {};
+    String dailyCountsKey = "${widget.accountName}_dailyHCounts";
+    String? dailyCountsData = prefs.getString(dailyCountsKey);
+    Map<String, int> dailyCounts = dailyCountsData != null
+        ? Map<String, int>.from(json.decode(dailyCountsData))
+        : {};
+
+    DateTime now = DateTime.now();
+    DateTime startOfDay = DateTime(now.year, now.month, now.day); //hourly chart refers to today's date
+    hourlyData = [];
+    dailyData = [];
+
+    int hoursToGenerate = 24;
+    DateTime roundedHour= DateTime(now.year, now.month, now.day, now.hour);
+    int cigarettesSmokedThisHour = 0;
+    double nicotineSmokedThisHour = 0.0;
+    double nicotineSmokedToday = 0.0;
+
+
+
+    for (int i = 0; i <= hoursToGenerate; i++) {
+      DateTime currentHour = startOfDay.add(Duration(hours: i));
+      String hourlyKey = "${widget.accountName}_hourly_cigarettes_${currentHour.year}${currentHour.month}${currentHour.day}${currentHour.hour}";
+      double cigarettes = hourlyCounts[hourlyKey]?.toDouble() ?? 0.0;
+      hourlyData.add(HourlyNicotineLevel(time: currentHour, level: cigarettes));
+
+      String dailyKey = "${widget.accountName}_daily_cigarettes_${currentHour.year}${currentHour.month}${currentHour.day}";
+      double nicotine = dailyCounts[dailyKey]?.toDouble() ?? 0.0;
+      dailyData.add(HourlyNicotineLevel(time: currentHour, level: nicotine));
+
+      if (currentHour.hour == now.hour &&
+          currentHour.day == now.day &&
+          currentHour.month == now.month &&
+          currentHour.year == now.year) {
+        //nicotineSmokedThisHour += cigarettes;
+        //nicotineSmokedToday += cigarettes;
+        //print('cigarettes: $cigarettes');
+        //print('nicotineSmokedToday: $nicotineSmokedToday');
+        //nicotineSmokedToday += _nicotine;
+        //print('hourly nicotine 1: $nicotineSmokedToday');
+      }
+    }
+
+    //adds data of current hour
+    final cigaretteCounter = Provider.of<CigaretteCounter>(context, listen: false);
+    hourlyData.add(HourlyNicotineLevel(time: now, level: cigaretteCounter.hourlyNicotine));
+    nicotineSmokedThisHour += cigaretteCounter.hourlyNicotine.toDouble();
+    cigarettesSmokedThisHour += cigaretteCounter.hourlyCigarettesSmoked;
+    //nicotineSmokedToday += _nicotine;
+    nicotineSmokedToday += cigaretteCounter.dailyNicotine.toDouble();
+
+    //print('nicotineSmokedToday: $nicotineSmokedToday');
+
+    //adds future data (for future hours)
+    DateTime tomorrow = DateTime(now.year, now.month, now.day +1);
+
+    int futureHours = (tomorrow.difference(roundedHour)).inHours;
+    for (int i = 1; i <= futureHours; i++) {
+      DateTime futureHour = now.add(Duration(hours: i));
+      futureHour = DateTime(futureHour.year, futureHour.month, futureHour.day, futureHour.hour);
+      hourlyData.add(HourlyNicotineLevel(time: futureHour, level: 0.0));
+    }
+
+    //updates state w/ hourly data
+    setState(() {
+      this.nicotineSmokedThisHour = nicotineSmokedThisHour;
+      this.nicotineSmokedToday = nicotineSmokedToday;
+    });
   }
-  
 
-  Future<void> _logout() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove('loggedInAccount'); //removes the login state
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => HomePage()), // Replaces HomePage() with your actual homepage widget
-      (Route<dynamic> route) => false, // Removes all previous routes
-    );
-  }
+@override
+Widget build(BuildContext context) {
+  final cigaretteCounter = Provider.of<CigaretteCounter>(context);
+  DateTime now = DateTime.now();
 
-
-  void _showDeleteConfirmation() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => DeleteAccountPage(
-          onDelete: () async {
-            SharedPreferences prefs = await SharedPreferences.getInstance();
-            String? accountName = prefs.getString('loggedInAccount');
-
-
-            if (accountName != null) {
-              // Recupera i dati degli utenti
-              String? usersData = prefs.getString('users');
-              Map<String, dynamic> users = usersData != null ? json.decode(usersData) : {};
-
-
-              // Rimuovi solo i dati dell'utente specifico
-              if (users.containsKey(accountName)) {
-                users.remove(accountName); // Rimuovi solo i dati dell'utente corrente
-                await prefs.setString('users', json.encode(users));
-              }
-
-              // Rimuovi il login
-              await prefs.remove('loggedInAccount');
-            }
-
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => HomePage()),
-              (Route<dynamic> route) => false,
-            );
-          },
-          onCancel: () {
-            Navigator.pop(context); //back to profilePage
-          },
+  return Scaffold(
+    backgroundColor: Color.fromARGB(255, 79, 149, 240),
+    appBar: AppBar(
+      title: Text(
+        'Plots',
+        style: TextStyle(
+          fontSize: 30,
+          color: Colors.white,
         ),
       ),
-    );
-  } //_showDeleteConfirmation
-
-
-  @override
-  Widget build(BuildContext context) {
-    final cigaretteProvider = Provider.of<CigaretteCounter>(context);
-    return Scaffold(
       backgroundColor: Color.fromARGB(255, 79, 149, 240),
-      appBar: AppBar(
-        title: Text(
-          'Profile',
-          //textAlign:TextAlign.center,
-          style: TextStyle(
-            fontSize: 30,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: Color.fromARGB(255, 79, 149, 240),
-        elevation: 0,
-        iconTheme: IconThemeData(color: Colors.white,),
-      ),
-
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'Hi $_firstName!',
-              style: TextStyle(
-                fontSize: 32, 
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            SizedBox(height: 28),
-            Text(
-              'Cigarette Type: $_cigaretteType',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.white,
-              ),
-            ),
-            Text(
-              'What do you want to do?',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.white,
-              ),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ModifyPage(
-                      accountName: widget.accountName,
-                      cigaretteType: _cigaretteType!,
-                      nicotine: 0.0,
+      elevation: 0,
+      iconTheme: IconThemeData(color: Colors.white),
+    ),
+    body: isLoading
+        ? Center(child: CircularProgressIndicator())
+        : SingleChildScrollView( // Avvolgi il contenuto con un SingleChildScrollView
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Column(
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Cigarettes smoked today: ${cigaretteCounter.cigarettesSmokedToday}/$threshold',
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ).then((_) {
-                  _loadUserData();
-                });
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color.fromARGB(255, 118, 174, 249),
-                side: BorderSide(color: Color.fromARGB(255, 35, 99, 150), width: 1), // Dark edges
-                padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15), 
-                textStyle: TextStyle(fontSize: 20),
-                foregroundColor: Color.fromARGB(255, 25, 73, 113),
-              ),
-              child: Text('Modify Profile'),
-            ),
-            
-
-            SizedBox(height: 28),
-          ElevatedButton(
-            onPressed: () {
-              _incrementCigaretteCount();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color.fromARGB(255, 118, 174, 249),
-              side: BorderSide(color: Color.fromARGB(255, 35, 99, 150), width: 1), // Dark edges
-              padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15), 
-              textStyle: TextStyle(fontSize: 20),
-              foregroundColor: Color.fromARGB(255, 25, 73, 113),
-
-            ),
-            child: Text('Add a Cigarette'),
-          ),
-          SizedBox(height: 10), 
-          GestureDetector(
-            onTap: () {
-              _decrementCigaretteCount();
-            },
-            child: Container(
-              padding: EdgeInsets.all(0), 
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Color.fromARGB(255, 35, 99, 150), width: 2),
-              ),
-              child: Icon(
-                Icons.remove,
-                color: Color.fromARGB(255, 35, 99, 150),
-                size: 30, 
-              ),
-            ),
-          ),
-
-          SizedBox(height: 28),
-          Text(
-            'Cigarettes Smoked Today: ${cigaretteProvider.cigarettesSmokedToday}',              
-              style: TextStyle(
-              fontSize: 18,
-              color: Colors.white,
-            ),
-          ),
-
-          SizedBox(height: 28),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(                    builder: (context) => Plots(accountName: widget.accountName),
-                 ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color.fromARGB(255, 118, 174, 249),
-              side: BorderSide(color: Color.fromARGB(255, 35, 99, 150), width: 1), // Dark edges
-              padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15), 
-              textStyle: TextStyle(fontSize: 20),
-              foregroundColor: Color.fromARGB(255, 25, 73, 113),
-            ),
-             child: Text('Your Progress'),
-          ),
-          Text(
-            'Hourly Nicotine: ${cigaretteProvider.hourlyNicotine.toStringAsFixed(2)} mg',
-            style: TextStyle(fontSize: 18),
-          ),
-          Text('DailyNicotine: ${cigaretteProvider.dailyNicotine.toStringAsFixed(2)} mg'),
-        ],
-      ),
-    ),
-    
-      bottomNavigationBar: Padding(
-        padding: EdgeInsets.all(16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            ElevatedButton(
-              onPressed: _showDeleteConfirmation,
-              child: Icon(Icons.delete, size: 30), 
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color.fromARGB(255, 118, 174, 249),
-                side: BorderSide(color: Color.fromARGB(255, 35, 99, 150), width: 1),
-                shadowColor: Colors.blue,
-                padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                foregroundColor: Color.fromARGB(255, 25, 73, 113), 
+                  Container(
+                    height: MediaQuery.of(context).size.height * 0.3,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Container(
+                        width: (_cigarettesPerDay * 7 * 50.0),
+                        child: NicotineChart(
+                          NicotineChart.createSampleData(data),
+                          animate: true,
+                          registrationDate: registrationDate!,
+                          cigarettesPerDay: _cigarettesPerDay,
+                          nicotineSmokedToday: nicotineSmokedToday,
+                          dailyNicotineTarget: dailyNicotineTarget,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Slide horizontally to view more data',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20), // Spazio tra i grafici
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    height: MediaQuery.of(context).size.height * 0.3, // Altezza ridotta
+                    child: HourlyNicotineChart(
+                      HourlyNicotineChart.createSampleData(hourlyData),
+                      animate: true,
+                      nicotineSmokedThisHour: nicotineSmokedThisHour,
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      'Nicotine smoked today: ${nicotineSmokedToday.toStringAsFixed(1)} / ${dailyNicotineTarget.toStringAsFixed(1)} mg',
+                      style: TextStyle(
+                        fontSize: 20,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            ElevatedButton(
-              onPressed: _logout,
-              child: Icon(Icons.logout, size: 30), 
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color.fromARGB(255, 118, 174, 249),
-                side: BorderSide(color: Color.fromARGB(255, 35, 99, 150), width: 1),
-                shadowColor: Colors.blue,
-                padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                foregroundColor: Color.fromARGB(255, 25, 73, 113),
-              ),
-            ),            
-          ],
-        ),
-      ),
-    );
-  }
+          ),
+  );
+}
 }
