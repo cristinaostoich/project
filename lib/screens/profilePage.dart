@@ -61,16 +61,16 @@ class _ProfilePageState extends State<ProfilePage> {
     
     String dailyNicotineKey = _getDailyNicotineKey();
     double dailyNicotine = prefs.getDouble(dailyNicotineKey) ?? 0.0;
-     String dailyCountKey = "${widget.accountName}_dailyHCounts";
-    String? dailyCountData = prefs.getString(dailyCountKey);
-    Map<String, int> dailyCount = dailyCountData != null ? Map<String, int>.from(json.decode(dailyCountData)) : {};
-    int count = prefs.getInt(dailyCountKey) ?? 0;
+    //String dailyCountKey = "${widget.accountName}_dailyHCounts";
+    //String? dailyCountData = prefs.getString(dailyCountKey);
+    //Map<String, int> dailyCount = dailyCountData != null ? Map<String, int>.from(json.decode(dailyCountData)) : {};
+    //int count = prefs.getInt(dailyCountKey) ?? 0;
 
 
     setState(() {
       Provider.of<CigaretteCounter>(context, listen: false).setHourlyNicotine(hourlyNicotine);
       Provider.of<CigaretteCounter>(context, listen: false).setDailyNicotine(dailyNicotine);
-      Provider.of<CigaretteCounter>(context, listen: false).setDailyCigarettes(count);
+      //Provider.of<CigaretteCounter>(context, listen: false).setDailyCigarettes(count);
 
     });
   }
@@ -153,10 +153,10 @@ class _ProfilePageState extends State<ProfilePage> {
     if (currentCount > 0) {
       int newCount = currentCount - 1;
       //print('daily nicotine: $dailyNicotine');
-      //setState(() {
-      //  prefs.setInt(todayKey, newCount);
-      //  Provider.of<CigaretteCounter>(context, listen: false).setCigarettes(newCount);
-      //});
+      setState(() {
+        prefs.setInt(todayKey, newCount);
+        Provider.of<CigaretteCounter>(context, listen: false).setCigarettes(newCount);
+      });
       _saveDailyCount(newCount);
       //_checkAndResetDailyCounter();
       //print('daily nicotine: $dailyNicotine');
@@ -208,12 +208,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
       
 
-      setState(() {
-        prefs.setInt(todayKey, newCount);
-        Provider.of<CigaretteCounter>(context, listen: false).setCigarettes(newCount);
-      
-
-      });
+      setState(() {});
     }
   }
 
