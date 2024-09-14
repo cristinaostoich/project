@@ -20,7 +20,8 @@ class CigaretteCounter with ChangeNotifier {
 
   void incrementCigarettes() {
     _cigarettesSmokedToday++;
-    //_dailyCigarettesCount++;
+    _dailyCigarettesCount++;
+    _hourlyCigarettesSmoked++;
     notifyListeners();
   }
 
