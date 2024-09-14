@@ -30,17 +30,8 @@ class _ProfilePageState extends State<ProfilePage> {
     _loadCigarettesSmokedToday();
     _loadHourlyNicotineData();
     _checkAndResetHourlyCounter();
+    _checkAndResetDailyCounter();
   }
-
-  Future<void> _loadHourlyNicotineData() async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  String hourlyNicotineKey = _getHourlyNicotineKey();
-  double hourlyNicotine = prefs.getDouble(hourlyNicotineKey) ?? 0.0;
-
-  setState(() {
-    Provider.of<CigaretteCounter>(context, listen: false).setHourlyNicotine(hourlyNicotine);
-  });
-}
 
   Future<void> _loadUserData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -61,6 +52,27 @@ class _ProfilePageState extends State<ProfilePage> {
       }
       //print('cigarette type: $_cigaretteType');
     }
+  }
+
+  Future<void> _loadHourlyNicotineData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String hourlyNicotineKey = _getHourlyNicotineKey();
+    double hourlyNicotine = prefs.getDouble(hourlyNicotineKey) ?? 0.0;
+    
+    String dailyNicotineKey = _getDailyNicotineKey();
+    double dailyNicotine = prefs.getDouble(dailyNicotineKey) ?? 0.0;
+     String dailyCountKey = "${widget.accountName}_dailyHCounts";
+    String? dailyCountData = prefs.getString(dailyCountKey);
+    Map<String, int> dailyCount = dailyCountData != null ? Map<String, int>.from(json.decode(dailyCountData)) : {};
+    int count = prefs.getInt(dailyCountKey) ?? 0;
+
+
+    setState(() {
+      Provider.of<CigaretteCounter>(context, listen: false).setHourlyNicotine(hourlyNicotine);
+      Provider.of<CigaretteCounter>(context, listen: false).setDailyNicotine(dailyNicotine);
+      Provider.of<CigaretteCounter>(context, listen: false).setDailyCigarettes(count);
+
+    });
   }
 
   Future<void> _loadCigarettesSmokedToday() async {
@@ -84,8 +96,12 @@ class _ProfilePageState extends State<ProfilePage> {
     String dailyNicotineKey = _getDailyNicotineKey();
 
     int newCount = Provider.of<CigaretteCounter>(context, listen: false).cigarettesSmokedToday +1;
-    int newCountH = Provider.of<CigaretteCounter>(context, listen: false).hourlyCigarettesSmoked ;
-    int dailyCount = Provider.of<CigaretteCounter>(context, listen: false).dailyCigarettesCount;
+    int newCountH = Provider.of<CigaretteCounter>(context, listen: false).hourlyCigarettesSmoked +1;
+    int dailyCount = Provider.of<CigaretteCounter>(context, listen: false).dailyCigarettesCount +1;
+    //print('newCount: $newCount');
+    //print('current daily count: $dailyCount'); //------> è 0
+    //print('current count H: $newCountH');
+
 
     double hourlyNicotine = prefs.getDouble(hourlyNicotineKey) ?? 0.0;
     double dailyNicotine = prefs.getDouble(dailyNicotineKey) ?? 0.0;
@@ -97,7 +113,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     hourlyNicotine += _nicotine ?? 0.0;
     dailyNicotine += _nicotine ?? 0.0;
-    print('daily nicotine: $dailyNicotine');
+    //print('daily nicotine: $dailyNicotine');
 
     setState(() {
       prefs.setInt(todayKey, newCount);
@@ -127,21 +143,25 @@ class _ProfilePageState extends State<ProfilePage> {
     int currentCount = Provider.of<CigaretteCounter>(context, listen: false).cigarettesSmokedToday;
     int currentCountH = Provider.of<CigaretteCounter>(context, listen: false).hourlyCigarettesSmoked;
     int currentDailyCount = Provider.of<CigaretteCounter>(context, listen: false).dailyCigarettesCount;
+    print('current daily count: $currentDailyCount'); //------> è 0
+    print('current count H: $currentCountH');
 
     double hourlyNicotine = prefs.getDouble(hourlyNicotineKey) ?? 0.0;
     double dailyNicotine = prefs.getDouble(dailyNicotineKey) ?? 0.0;
+    //print('daily nicotine: $dailyNicotine');
 
     if (currentCount > 0) {
       int newCount = currentCount - 1;
-      setState(() {
-        prefs.setInt(todayKey, newCount);
-        Provider.of<CigaretteCounter>(context, listen: false).setCigarettes(newCount);
-      });
+      //print('daily nicotine: $dailyNicotine');
+      //setState(() {
+      //  prefs.setInt(todayKey, newCount);
+      //  Provider.of<CigaretteCounter>(context, listen: false).setCigarettes(newCount);
+      //});
       _saveDailyCount(newCount);
-      _checkAndResetHourlyCounter();
-      _checkAndResetDailyCounter();
-
-
+      //_checkAndResetDailyCounter();
+      //print('daily nicotine: $dailyNicotine');
+      
+      
       /////////VEDI SE QUESTO IF VA QUA O ALTROVE
       if (currentDailyCount > 0) {
         int dailyCount = currentDailyCount - 1;
@@ -150,12 +170,17 @@ class _ProfilePageState extends State<ProfilePage> {
         } else {
           dailyNicotine = 0.0;
         }
+        print('daily nicotine: $dailyNicotine');
         setState(() {
           prefs.setInt(dailyKey, dailyCount);
           prefs.setDouble(dailyNicotineKey, dailyNicotine);
           Provider.of<CigaretteCounter>(context, listen: false).setDailyCigarettes(dailyCount);
           Provider.of<CigaretteCounter>(context, listen: false).setDailyNicotine(dailyNicotine);
+          Provider.of<CigaretteCounter>(context, listen: false).updateDailyCount(dailyCount, dailyNicotine);
+
         });
+        _checkAndResetDailyCounter();
+        //print('daily nicotine: $dailyNicotine');
       }
 
       if (currentCountH > 0) {
@@ -165,21 +190,30 @@ class _ProfilePageState extends State<ProfilePage> {
         } else {
           hourlyNicotine = 0.0;
         }
+        //print('hourlyNicotine: $hourlyNicotine');
 
         setState(() {
           prefs.setInt(hourlyKey, newCountH);
           prefs.setDouble(hourlyNicotineKey, hourlyNicotine);
           Provider.of<CigaretteCounter>(context, listen: false).setHourlyCigarettes(newCountH);
           Provider.of<CigaretteCounter>(context, listen: false).setHourlyNicotine(hourlyNicotine);
+          Provider.of<CigaretteCounter>(context, listen: false).updateHourlyCount(newCountH, hourlyNicotine);
+
           
         });
 
         _saveHourlyCount(newCountH);
         _checkAndResetHourlyCounter();
-        _checkAndResetDailyCounter();
       }
 
-      setState(() {});
+      
+
+      setState(() {
+        prefs.setInt(todayKey, newCount);
+        Provider.of<CigaretteCounter>(context, listen: false).setCigarettes(newCount);
+      
+
+      });
     }
   }
 
@@ -234,9 +268,9 @@ class _ProfilePageState extends State<ProfilePage> {
     if (now.difference(lastUpdate).inHours != 0) {
       prefs.setInt(hourlyKey, 0);
       prefs.setDouble(hourlyNicotineKey, 0.0);
-      Provider.of<CigaretteCounter>(context, listen: false).updateHourlyCount(0, 0.0);}
-    prefs.setString(lastUpdateKey, now.toIso8601String());
-
+      Provider.of<CigaretteCounter>(context, listen: false).updateHourlyCount(0, 0.0);
+      prefs.setString(lastUpdateKey, now.toIso8601String());
+    }
   }
 
   Future<void> _checkAndResetDailyCounter() async {
@@ -252,8 +286,9 @@ class _ProfilePageState extends State<ProfilePage> {
     if (now.difference(lastUpdateDays).inDays != 0) {
       prefs.setInt(dailyKey, 0);
       prefs.setDouble(dailyNicotineKey, 0.0);
-      Provider.of<CigaretteCounter>(context, listen: false).updateDailyCount(0, 0.0);}
-    prefs.setString(lastUpdateKeyDays, now.toIso8601String());
+      Provider.of<CigaretteCounter>(context, listen: false).updateDailyCount(0, 0.0);
+      prefs.setString(lastUpdateKeyDays, now.toIso8601String());
+    }
   }
 
   Future<void> _saveDailyCount(int count) async {
