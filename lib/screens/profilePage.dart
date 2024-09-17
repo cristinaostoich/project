@@ -61,7 +61,8 @@ class _ProfilePageState extends State<ProfilePage> {
     
     String dailyNicotineKey = _getDailyNicotineKey();
     double dailyNicotine = prefs.getDouble(dailyNicotineKey) ?? 0.0;
-    //String dailyCountKey = "${widget.accountName}_dailyHCounts";
+    ////////RIGA SOTTO NON ERA COMMENTATA///////////////////
+    //String dailyCountKey = "${widget.accountName}_dailyHCounts"; /////NON ERA COMMENTATA
     //String? dailyCountData = prefs.getString(dailyCountKey);
     //Map<String, int> dailyCount = dailyCountData != null ? Map<String, int>.from(json.decode(dailyCountData)) : {};
     //int count = prefs.getInt(dailyCountKey) ?? 0;
@@ -95,9 +96,9 @@ class _ProfilePageState extends State<ProfilePage> {
     String dailyKey = _getDailyKey();
     String dailyNicotineKey = _getDailyNicotineKey();
 
-    int newCount = Provider.of<CigaretteCounter>(context, listen: false).cigarettesSmokedToday +1;
-    int newCountH = Provider.of<CigaretteCounter>(context, listen: false).hourlyCigarettesSmoked +1;
-    int dailyCount = Provider.of<CigaretteCounter>(context, listen: false).dailyCigarettesCount +1;
+    int newCount = Provider.of<CigaretteCounter>(context, listen: false).cigarettesSmokedToday;
+    int newCountH = Provider.of<CigaretteCounter>(context, listen: false).hourlyCigarettesSmoked+1;
+    int dailyCount = Provider.of<CigaretteCounter>(context, listen: false).dailyCigarettesCount+1;
     //print('newCount: $newCount');
     //print('current daily count: $dailyCount'); //------> è 0
     //print('current count H: $newCountH');
@@ -109,7 +110,7 @@ class _ProfilePageState extends State<ProfilePage> {
     //await _recordCigaretteTime();
 
     _saveDailyCount(newCount);
-    _checkAndResetDailyCounter();
+    //_checkAndResetDailyCounter();
 
     hourlyNicotine += _nicotine ?? 0.0;
     dailyNicotine += _nicotine ?? 0.0;
@@ -128,6 +129,7 @@ class _ProfilePageState extends State<ProfilePage> {
     });
 
     _saveHourlyCount(newCountH);
+    _saveDailyHCount(dailyCount);
     _checkAndResetHourlyCounter();
     _checkAndResetDailyCounter();
   }
@@ -143,8 +145,8 @@ class _ProfilePageState extends State<ProfilePage> {
     int currentCount = Provider.of<CigaretteCounter>(context, listen: false).cigarettesSmokedToday;
     int currentCountH = Provider.of<CigaretteCounter>(context, listen: false).hourlyCigarettesSmoked;
     int currentDailyCount = Provider.of<CigaretteCounter>(context, listen: false).dailyCigarettesCount;
-    print('current daily count: $currentDailyCount'); //------> è 0
-    print('current count H: $currentCountH');
+    //print('current daily count: $currentDailyCount'); //------> è 0
+    //print('current count H: $currentCountH');
 
     double hourlyNicotine = prefs.getDouble(hourlyNicotineKey) ?? 0.0;
     double dailyNicotine = prefs.getDouble(dailyNicotineKey) ?? 0.0;
@@ -158,11 +160,10 @@ class _ProfilePageState extends State<ProfilePage> {
         Provider.of<CigaretteCounter>(context, listen: false).setCigarettes(newCount);
       });
       _saveDailyCount(newCount);
-      //_checkAndResetDailyCounter();
+      _checkAndResetDailyCounter();
       //print('daily nicotine: $dailyNicotine');
       
       
-      /////////VEDI SE QUESTO IF VA QUA O ALTROVE
       if (currentDailyCount > 0) {
         int dailyCount = currentDailyCount - 1;
         if (dailyNicotine >= (_nicotine ?? 0.0)) {
@@ -170,7 +171,7 @@ class _ProfilePageState extends State<ProfilePage> {
         } else {
           dailyNicotine = 0.0;
         }
-        print('daily nicotine: $dailyNicotine');
+        //print('daily nicotine: $dailyNicotine');
         setState(() {
           prefs.setInt(dailyKey, dailyCount);
           prefs.setDouble(dailyNicotineKey, dailyNicotine);
@@ -180,6 +181,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
         });
         _checkAndResetDailyCounter();
+        _saveDailyHCount(dailyCount);
         //print('daily nicotine: $dailyNicotine');
       }
 
@@ -289,11 +291,21 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _saveDailyCount(int count) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String todayKey = _getTodayKey();
-    String dailyCountsKey = "${widget.accountName}_dailyHCounts";
+    String dailyCountsKey = "${widget.accountName}_dailyCounts";
     String? dailyCountsData = prefs.getString(dailyCountsKey);
     Map<String, int> dailyCounts = dailyCountsData != null ? Map<String, int>.from(json.decode(dailyCountsData)) : {};
     dailyCounts[todayKey] = count;
     await prefs.setString(dailyCountsKey, json.encode(dailyCounts));
+  }
+
+    Future<void> _saveDailyHCount(int count) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String dailyHKey = _getDailyKey();
+    String dailyCountsHKey = "${widget.accountName}_dailyHCounts";
+    String? dailyCountsHData = prefs.getString(dailyCountsHKey);
+    Map<String, int> dailyHCounts = dailyCountsHData != null ? Map<String, int>.from(json.decode(dailyCountsHData)) : {};
+    dailyHCounts[dailyHKey] = count;
+    await prefs.setString(dailyCountsHKey, json.encode(dailyHCounts));
   }
 
   Future<void> _saveHourlyCount(int count) async {
