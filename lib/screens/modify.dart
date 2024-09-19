@@ -44,13 +44,13 @@ class _ModifyPageState extends State<ModifyPage> {
         _fullName =
             '${users[widget.accountName]['FirstName']} ${users[widget.accountName]['LastName']}';
 
-        // Formatta la data per visualizzare solo giorno e mese
+        //formats date to visualize day and month only
         if (_registrationDate != null) {
           DateTime registrationDateTime = DateTime.parse(_registrationDate!);
           _registrationDate = DateFormat('d MMM').format(registrationDateTime);
         }
 
-        // Imposta la nicotina se non è stata cambiata
+        //sets nicotine if it has not been changed
         if (_selectedCigaretteType == widget.cigaretteType) {
           _nicotine = users[widget.accountName]['Nicotine'];
         }
@@ -83,15 +83,14 @@ class _ModifyPageState extends State<ModifyPage> {
       appBar: AppBar(
         title: Text(
           'Your Profile',
-          //textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 30, // Bigger font size for the title
+            fontSize: 30,
             color: Colors.white,
-            //fontWeight: FontWeight.bold, // Optional: Make the text bold
+            //fontWeight: FontWeight.bold,
           ),
         ),
         backgroundColor:
-            Color.fromARGB(255, 79, 149, 240), // Set the same background color for AppBar
+            Color.fromARGB(255, 79, 149, 240),
         elevation: 0,
         iconTheme: IconThemeData(color: Colors.white,),
       ),
@@ -136,7 +135,7 @@ class _ModifyPageState extends State<ModifyPage> {
                     dropdownColor: Color.fromARGB(255, 118, 174, 249),
                     icon: Icon(
                       Icons.arrow_drop_down, 
-                      color: Colors.white, // Imposta il colore della freccetta su bianco
+                      color: Colors.white, //arrow color
                     ),
                     onChanged: (newValue) {
                       setState(() {
@@ -177,10 +176,10 @@ class _ModifyPageState extends State<ModifyPage> {
                 onPressed: _saveChanges,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color.fromARGB(255, 118, 174, 249),
-                  side: BorderSide(color: Color.fromARGB(255, 35, 99, 150), width: 1), // Dark edges
+                  side: BorderSide(color: Color.fromARGB(255, 35, 99, 150), width: 1),
                   padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15), 
-                  textStyle: TextStyle(fontSize: 20), //era 20
-                  foregroundColor: Color.fromARGB(255, 25, 73, 113), // Dark green text color
+                  textStyle: TextStyle(fontSize: 20),
+                  foregroundColor: Color.fromARGB(255, 25, 73, 113),
                 ),
                 child: Text('Save Changes', style: smallTextStyle),
               ),
