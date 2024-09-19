@@ -48,7 +48,7 @@ class NicotineChart extends StatelessWidget {
             transitionFormat: 'dd MMM',
           ),
         ),
-        tickProviderSpec: charts.DayTickProviderSpec(increments: [1]), // Incrementi giorno per giorno
+        tickProviderSpec: charts.DayTickProviderSpec(increments: [1]), // Increments day by day
         renderSpec: charts.SmallTickRendererSpec(
           labelStyle: charts.TextStyleSpec(
             fontSize: 14,
@@ -61,22 +61,22 @@ class NicotineChart extends StatelessWidget {
             color: charts.MaterialPalette.white,
           ),
         ),
-        // Imposta l'intervallo dell'asse X al periodo di registrazione
+        // sets x-axis on registration date
         viewport: charts.DateTimeExtents(
           start: fixedStartDate,
           end: fixedEndDate,
         ),
       ),
       defaultRenderer: charts.BarRendererConfig<DateTime>(
-        groupingType: charts.BarGroupingType.grouped, // Barre raggruppate per ogni giorno
+        groupingType: charts.BarGroupingType.grouped,
         cornerStrategy: const charts.ConstCornerStrategy(20),
       ),
       primaryMeasureAxis: charts.NumericAxisSpec(
         tickProviderSpec: charts.BasicNumericTickProviderSpec(desiredTickCount: 10),
         renderSpec: charts.GridlineRendererSpec(
           labelStyle: charts.TextStyleSpec(
-            fontSize: 14, // Imposta la dimensione del testo leggermente più grande
-            color: charts.MaterialPalette.white, // Imposta il colore del testo su bianco
+            fontSize: 14,
+            color: charts.MaterialPalette.white,
           ),
           lineStyle: charts.LineStyleSpec(
             color: charts.MaterialPalette.white,
@@ -87,7 +87,7 @@ class NicotineChart extends StatelessWidget {
   }
 
 
-  // Crea dati di esempio
+  // creates sample data
   static List<charts.Series<NicotineLevel, DateTime>> createSampleData(List<NicotineLevel> data) {
     return [
       charts.Series<NicotineLevel, DateTime>(
@@ -125,7 +125,7 @@ class HourlyNicotineChart extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Grafico della Nicotina
+        //nicotine chart
         Expanded(
           child: charts.TimeSeriesChart(
             seriesList,
@@ -134,7 +134,7 @@ class HourlyNicotineChart extends StatelessWidget {
             domainAxis: charts.DateTimeAxisSpec(
               tickFormatterSpec: charts.AutoDateTimeTickFormatterSpec(
                 hour: charts.TimeFormatterSpec(
-                  format: 'HH', // Visualizza solo le ore sull'asse X
+                  format: 'HH',
                   transitionFormat: 'HH',
                 ),
               ),
@@ -167,8 +167,8 @@ class HourlyNicotineChart extends StatelessWidget {
               tickProviderSpec: charts.BasicNumericTickProviderSpec(desiredTickCount: 10),
               renderSpec: charts.GridlineRendererSpec(
                 labelStyle: charts.TextStyleSpec(
-                  fontSize: 14, // Imposta la dimensione del testo leggermente più grande
-                  color: charts.MaterialPalette.white, // Imposta il colore del testo su bianco
+                  fontSize: 14,
+                  color: charts.MaterialPalette.white,
                 ),
                 lineStyle: charts.LineStyleSpec(
                   color: charts.MaterialPalette.white,
