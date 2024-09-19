@@ -1,4 +1,3 @@
-//import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -27,7 +26,7 @@ class _PlotsState extends State<Plots> {
   int _cigarettesPerDay = 0;
   int threshold = 0;
   bool isLoading = true;
-  double nicotineSmokedToday = 0.0; //questa variabile va bene e non va modificata nel resto del codice
+  double nicotineSmokedToday = 0.0;
   double _nicotine = 0.0;
   double nicotineSmokedThisHour = 0.0;
   double dailyNicotineTarget = 0.0;
@@ -38,22 +37,12 @@ class _PlotsState extends State<Plots> {
     super.initState();
     _loadRegistrationData();
 
-    ////////////////RIMETTI IN CASO/////////////////
-    //Aggiorna i contatori all'avvio della schermata
+    //updates counters when the screen starts
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final cigaretteCounter = Provider.of<CigaretteCounter>(context, listen: false);
       cigaretteCounter.resetCountersIfNeeded();
     });
   }
-
-  //@override
-  //void didChangeDependencies() {
-  //  super.didChangeDependencies();
-
-    // Assicurati che i contatori siano aggiornati ogni volta che cambia lo stato
-  //  final cigaretteCounter = Provider.of<CigaretteCounter>(context, listen: false);
-  //  cigaretteCounter.resetCountersIfNeeded();
-  //}
 
 
   Future<void> _loadRegistrationData() async {
@@ -61,9 +50,7 @@ class _PlotsState extends State<Plots> {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? usersData = prefs.getString('users');
 
-
       Map<String, dynamic> users = usersData != null ? json.decode(usersData) : {};
-      //final cigaretteCounter = Provider.of<CigaretteCounter>(context, listen:false);
 
 
       if (users.containsKey(widget.accountName)) {
@@ -80,8 +67,7 @@ class _PlotsState extends State<Plots> {
           registrationDate = DateTime.now();
         }
 
-
-        //cauculates number of days from registration
+        //calculates number of days from registration
         if (registrationDate != null) {
           int daysSinceRegistration = DateTime.now().difference(registrationDate!).inDays;
 
@@ -121,7 +107,6 @@ class _PlotsState extends State<Plots> {
       data = [];
 
       int totalCigarettes = 0;
-      //double nicotineSmokedToday = 0.0;
 
       int daysToGenerate = _cigarettesPerDay * 7;
       DateTime roundedDate = DateTime(now.year, now.month, now.day);
@@ -138,11 +123,7 @@ class _PlotsState extends State<Plots> {
       final cigaretteCounter = Provider.of<CigaretteCounter>(context, listen: false);
       data.add(NicotineLevel(date: now, level: cigaretteCounter.cigarettesSmokedToday.toDouble()));
       totalCigarettes += cigaretteCounter.cigarettesSmokedToday;
-      //print('totalCigarettes: $totalCigarettes');
-      //nicotineSmokedToday = totalCigarettes * _nicotine;
-      //print('nicotineSmokedToday: $nicotineSmokedToday');
 
-      //nicotineSmokedToday = totalCigarettes * _nicotine;
       int futureDays = -(now.difference(endDate).inDays);
 
       for (int i = 1; i <= futureDays; i++) {
@@ -151,9 +132,7 @@ class _PlotsState extends State<Plots> {
       }
       setState(() {
         //will be used to show the counter in the widget
-        //this.nicotineSmokedToday = nicotineSmokedToday;
         this.dailyNicotineTarget = dailyNicotineTarget;
-        //this.nicotineSmokedToday = nicotineSmokedToday;
       });
     }
   }
@@ -184,7 +163,6 @@ class _PlotsState extends State<Plots> {
     double nicotineSmokedToday = 0.0;
 
 
-
     for (int i = 0; i <= hoursToGenerate; i++) {
       DateTime currentHour = startOfDay.add(Duration(hours: i));
       String hourlyKey = "${widget.accountName}_hourly_cigarettes_${currentHour.year}${currentHour.month}${currentHour.day}${currentHour.hour}";
@@ -194,29 +172,15 @@ class _PlotsState extends State<Plots> {
       String dailyKey = "${widget.accountName}_daily_cigarettes_${currentHour.year}${currentHour.month}${currentHour.day}";
       double nicotine = dailyCounts[dailyKey]?.toDouble() ?? 0.0;
       dailyData.add(HourlyNicotineLevel(time: currentHour, level: nicotine));
-
-      if (currentHour.hour == now.hour &&
-          currentHour.day == now.day &&
-          currentHour.month == now.month &&
-          currentHour.year == now.year) {
-        //nicotineSmokedThisHour += cigarettes;
-        //nicotineSmokedToday += cigarettes;
-        //print('cigarettes: $cigarettes');
-        //print('nicotineSmokedToday: $nicotineSmokedToday');
-        //nicotineSmokedToday += _nicotine;
-        //print('hourly nicotine 1: $nicotineSmokedToday');
-      }
     }
 
     //adds data of current hour
     final cigaretteCounter = Provider.of<CigaretteCounter>(context, listen: false);
     hourlyData.add(HourlyNicotineLevel(time: now, level: cigaretteCounter.hourlyNicotine));
     nicotineSmokedThisHour += cigaretteCounter.hourlyNicotine.toDouble();
+    //print('nicotine smoked this hour: $nicotineSmokedThisHour');
     cigarettesSmokedThisHour += cigaretteCounter.hourlyCigarettesSmoked;
-    //nicotineSmokedToday += _nicotine;
     nicotineSmokedToday += cigaretteCounter.dailyNicotine.toDouble();
-
-    //print('nicotineSmokedToday: $nicotineSmokedToday');
 
     //adds future data (for future hours)
     DateTime tomorrow = DateTime(now.year, now.month, now.day +1);
@@ -256,7 +220,7 @@ Widget build(BuildContext context) {
     ),
     body: isLoading
         ? Center(child: CircularProgressIndicator())
-        : SingleChildScrollView( // Avvolgi il contenuto con un SingleChildScrollView
+        : SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Column(
@@ -306,7 +270,7 @@ Widget build(BuildContext context) {
                       ),
                     ),
                   ),
-                  SizedBox(height: 20), // Spazio tra i grafici
+                  SizedBox(height: 20),
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Text(
@@ -319,7 +283,7 @@ Widget build(BuildContext context) {
                     ),
                   ),
                   Container(
-                    height: MediaQuery.of(context).size.height * 0.3, // Altezza ridotta
+                    height: MediaQuery.of(context).size.height * 0.3, //reduced hight
                     child: HourlyNicotineChart(
                       HourlyNicotineChart.createSampleData(hourlyData),
                       animate: true,
