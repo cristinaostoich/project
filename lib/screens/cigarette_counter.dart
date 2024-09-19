@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class CigaretteCounter with ChangeNotifier {
   int _cigarettesSmokedToday = 0;
@@ -59,8 +60,35 @@ class CigaretteCounter with ChangeNotifier {
     } else {
       _hourlyCigarettesSmoked = 0;
       _hourlyNicotine = 0.0;
+      await _saveHourlyData(count,nicotine,now);
     }
     notifyListeners();
+  }
+
+
+/////////VEDI SE CANCELLARE//////////////////////////////////
+  Future<void> _saveHourlyData(int count, double nicotine, DateTime now) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String key = "${now.year}${now.month}${now.day}${now.hour}";
+    Map<String, double> hourlyData = {};
+    // Load existing data if available
+    String? existingData = prefs.getString('hourlyData');
+    if (existingData != null) {
+    try {
+      Map<String, dynamic> jsonData = json.decode(existingData);
+      
+      // Each value has to be of type double
+      jsonData.forEach((k, v) {
+        if (v is num) {
+          hourlyData[k] = v.toDouble();
+        }
+      });
+    } catch (e) {
+      print("Errore durante il parsing dei dati: $e");
+    }
+  }
+    hourlyData[key] = nicotine; // Save nicotine level
+    await prefs.setString('hourlyData', json.encode(hourlyData));
   }
 
   void updateDailyCount(int count, double nicotine) async {
