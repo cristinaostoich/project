@@ -14,7 +14,7 @@ class NicotineChart extends StatelessWidget {
   final bool animate;
   final DateTime registrationDate;
   final int cigarettesPerDay;
-  final double nicotineSmokedToday;
+  //final double nicotineSmokedToday;
   final double dailyNicotineTarget;
 
 
@@ -23,7 +23,7 @@ class NicotineChart extends StatelessWidget {
     this.animate = false,
     required this.registrationDate,
     required this.cigarettesPerDay,
-    required this.nicotineSmokedToday,
+    //required this.nicotineSmokedToday,
     required this.dailyNicotineTarget,
   });
 
