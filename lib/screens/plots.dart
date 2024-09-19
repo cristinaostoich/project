@@ -145,10 +145,10 @@ class _PlotsState extends State<Plots> {
     Map<String, int> hourlyCounts = hourlyCountsData != null
         ? Map<String, int>.from(json.decode(hourlyCountsData))
         : {};
-    String dailyCountsKey = "${widget.accountName}_dailyHCounts";
-    String? dailyCountsData = prefs.getString(dailyCountsKey);
-    Map<String, int> dailyCounts = dailyCountsData != null
-        ? Map<String, int>.from(json.decode(dailyCountsData))
+    String dailyHCountsKey = "${widget.accountName}_dailyHCounts";
+    String? dailyHCountsData = prefs.getString(dailyHCountsKey);
+    Map<String, int> dailyHCounts = dailyHCountsData != null
+        ? Map<String, int>.from(json.decode(dailyHCountsData))
         : {};
 
     DateTime now = DateTime.now();
@@ -170,7 +170,7 @@ class _PlotsState extends State<Plots> {
       hourlyData.add(HourlyNicotineLevel(time: currentHour, level: cigarettes));
 
       String dailyKey = "${widget.accountName}_daily_cigarettes_${currentHour.year}${currentHour.month}${currentHour.day}";
-      double nicotine = dailyCounts[dailyKey]?.toDouble() ?? 0.0;
+      double nicotine = dailyHCounts[dailyHCountsKey]?.toDouble() ?? 0.0;
       dailyData.add(HourlyNicotineLevel(time: currentHour, level: nicotine));
     }
 
@@ -178,7 +178,7 @@ class _PlotsState extends State<Plots> {
     final cigaretteCounter = Provider.of<CigaretteCounter>(context, listen: false);
     hourlyData.add(HourlyNicotineLevel(time: now, level: cigaretteCounter.hourlyNicotine));
     nicotineSmokedThisHour += cigaretteCounter.hourlyNicotine.toDouble();
-    //print('nicotine smoked this hour: $nicotineSmokedThisHour');
+    print('nicotine smoked this hour: $nicotineSmokedThisHour');
     cigarettesSmokedThisHour += cigaretteCounter.hourlyCigarettesSmoked;
     nicotineSmokedToday += cigaretteCounter.dailyNicotine.toDouble();
 
