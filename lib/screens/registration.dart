@@ -31,13 +31,13 @@ class _RegistrationPageState extends State<RegistrationPage> {
       SharedPreferences prefs = await SharedPreferences.getInstance();
 
 
-      // Recupera i dati degli utenti esistenti
+      //retrieves data of existent users
       String? usersData = prefs.getString('users');
       Map<String, dynamic> users =
           usersData != null ? json.decode(usersData) : {};
 
 
-      // Controlla se l'account name già esiste
+      //checks if accountName already exists
       if (users.containsKey(_accountName)) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -49,7 +49,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
         String formattedDate = registrationDate.toIso8601String();
 
 
-        // Aggiungi i dati del nuovo utente
+        //adds new user's data
         users[_accountName!] = {
           'FirstName': _firstName,
           'LastName': _lastName,
@@ -61,7 +61,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
         };
 
 
-        // Salva i dati aggiornati
+        //saves updated data
         await prefs.setString('users', json.encode(users));
         print('User data saved: ${users[_accountName!]}');
         Navigator.pop(context);
@@ -104,7 +104,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 ),
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 20 // Set the input text color to white
+                  fontSize: 20 //input text color to white
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
