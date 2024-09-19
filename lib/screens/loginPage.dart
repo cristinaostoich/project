@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert'; // Importa il pacchetto per la gestione del JSON
+import 'dart:convert'; // imports package for JSON management
 import 'profilePage.dart';
 
 class LoginPage extends StatefulWidget {
@@ -21,7 +21,7 @@ class _LoginPageState extends State<LoginPage> {
 
     if (users.containsKey(_accountName) &&
         users[_accountName]['Password'] == _password) {
-      // Salva il nome dell'account nelle SharedPreferences
+      // saves accountName in the shared preferences
       await prefs.setString('loggedInAccount', _accountName!);
 
       Navigator.pushReplacement(
@@ -44,18 +44,17 @@ class _LoginPageState extends State<LoginPage> {
       appBar: AppBar(
         title: Text(
           'Login',
-          //textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 30, // Bigger font size for the title
             color: Colors.white,
-            //fontWeight: FontWeight.bold, // Optional: Make the text bold
+            //fontWeight: FontWeight.bold,
           ),
         ),
-        //centerTitle: true, // Ensures the title is centered
+        //centerTitle: true,
         backgroundColor:
             Color.fromARGB(255, 79, 149, 240), // Set the same background color for AppBar
         elevation: 0,
-        iconTheme: IconThemeData(color: Colors.white,), // Remove shadow for a cleaner look
+        iconTheme: IconThemeData(color: Colors.white,),
       ),
 
       body: Padding(
@@ -72,21 +71,17 @@ class _LoginPageState extends State<LoginPage> {
                     fontSize: 20,
                     color: Colors.white,
                   ),
-                  //hintStyle: TextStyle(color: Colors.white70,),
                   enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white), // Colore della riga sotto il campo di testo
+                    borderSide: BorderSide(color: Colors.white), //color of the line below the text
                   ),
                   focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white), // Colore della riga quando il campo è in focus
+                    borderSide: BorderSide(color: Colors.white), //color of the line when the field is in focus
                   ),
                 ),
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 20,
                 ),
-                //textAlign: TextAlign.center, // Allinea il testo all'interno del campo di testo
-                // Optional: Se desideri anche centrare il contenuto
-                //textAlignVertical: TextAlignVertical.center, // Allinea verticalmente il testo
 
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -106,13 +101,11 @@ class _LoginPageState extends State<LoginPage> {
                     fontSize: 20,
                     color: Colors.white,
                   ),
-                  //hintText: 'Enter your account name',
-                  //hintStyle: TextStyle(color: Colors.white70,),
                   enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white), // Colore della riga sotto il campo di testo
+                    borderSide: BorderSide(color: Colors.white),
                   ),
                   focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white), // Colore della riga quando il campo è in focus
+                    borderSide: BorderSide(color: Colors.white),
                   ),
                 ),
                 obscureText: true,
@@ -130,18 +123,17 @@ class _LoginPageState extends State<LoginPage> {
                   _password = value;
                 },
               ),
-              SizedBox(height: 50), // space
+              SizedBox(height: 50),
               SizedBox(
-                width: 150, // Increase button width-200
-                height: 50, // Increase button height-60
+                width: 150, // Increase button width
+                height: 50, // Increase button height
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color.fromARGB(255, 118, 174, 249),
                     side: BorderSide(
-                      color: Color.fromARGB(255, 35, 99, 150), width: 1), // Black edges
-                      textStyle: TextStyle(fontSize: 22), // Bigger button text
+                      color: Color.fromARGB(255, 35, 99, 150), width: 1),
+                      textStyle: TextStyle(fontSize: 22),
                       foregroundColor: Color.fromARGB(255, 25, 73, 113),
-                      //foregroundColor: Colors.white,
                   ),
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
