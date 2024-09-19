@@ -104,7 +104,6 @@ class _ProfilePageState extends State<ProfilePage> {
     double hourlyNicotine = prefs.getDouble(hourlyNicotineKey) ?? 0.0;
     double dailyNicotine = prefs.getDouble(dailyNicotineKey) ?? 0.0;
 
-    _saveDailyCount(newCount);
 
     hourlyNicotine += _nicotine ?? 0.0;
     dailyNicotine += _nicotine ?? 0.0;
@@ -121,6 +120,7 @@ class _ProfilePageState extends State<ProfilePage> {
       Provider.of<CigaretteCounter>(context, listen: false).updateDailyCount(dailyCount, dailyNicotine);
     });
 
+    _saveDailyCount(newCount);
     _saveHourlyCount(newCountH);
     _saveDailyHCount(dailyCount);
     _checkAndResetHourlyCounter();
@@ -136,8 +136,8 @@ class _ProfilePageState extends State<ProfilePage> {
     String dailyNicotineKey = _getDailyNicotineKey();
 
     int currentCount = Provider.of<CigaretteCounter>(context, listen: false).cigarettesSmokedToday;
-    int currentCountH = Provider.of<CigaretteCounter>(context, listen: false).hourlyCigarettesSmoked +1; //without +1
-    int currentDailyCount = Provider.of<CigaretteCounter>(context, listen: false).dailyCigarettesCount +1; //without +1
+    int currentCountH = Provider.of<CigaretteCounter>(context, listen: false).hourlyCigarettesSmoked ; //without +1
+    int currentDailyCount = Provider.of<CigaretteCounter>(context, listen: false).dailyCigarettesCount ; //without +1
 
     double hourlyNicotine = prefs.getDouble(hourlyNicotineKey) ?? 0.0;
     double dailyNicotine = prefs.getDouble(dailyNicotineKey) ?? 0.0;
@@ -247,7 +247,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _checkAndResetDailyCounter() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String dailyKey = _getDailyKey();
+    String dailyHKey = _getDailyKey();
     String dailyNicotineKey = _getDailyNicotineKey();
     String lastUpdateKeyDays = "${widget.accountName}_lastHourlyUpdateDays";
     DateTime now = DateTime.now();
@@ -256,7 +256,7 @@ class _ProfilePageState extends State<ProfilePage> {
     //DateTime tomorrow = DateTime(now.year, now.month, now.day + 1);
 
     if (now.difference(lastUpdateDays).inDays != 0) {
-      prefs.setInt(dailyKey, 0);
+      prefs.setInt(dailyHKey, 0);
       prefs.setDouble(dailyNicotineKey, 0.0);
       Provider.of<CigaretteCounter>(context, listen: false).updateDailyCount(0, 0.0);
       prefs.setString(lastUpdateKeyDays, now.toIso8601String());
