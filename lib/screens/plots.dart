@@ -109,8 +109,6 @@ class _PlotsState extends State<Plots> {
       int totalCigarettes = 0;
 
       int daysToGenerate = _cigarettesPerDay * 7;
-      DateTime roundedDate = DateTime(now.year, now.month, now.day);
-
 
       for (int i = 0; i < daysToGenerate; i++) {
         DateTime currentDate = startDate.add(Duration(days: i));
@@ -169,8 +167,8 @@ class _PlotsState extends State<Plots> {
       double cigarettes = hourlyCounts[hourlyKey]?.toDouble() ?? 0.0;
       hourlyData.add(HourlyNicotineLevel(time: currentHour, level: cigarettes));
 
-      String dailyKey = "${widget.accountName}_daily_cigarettes_${currentHour.year}${currentHour.month}${currentHour.day}";
-      double nicotine = dailyHCounts[dailyHCountsKey]?.toDouble() ?? 0.0;
+      String dailyHKey = "${widget.accountName}_daily_cigarettes_${currentHour.year}${currentHour.month}${currentHour.day}";
+      double nicotine = dailyHCounts[dailyHKey]?.toDouble() ?? 0.0;
       dailyData.add(HourlyNicotineLevel(time: currentHour, level: nicotine));
     }
 
@@ -178,7 +176,7 @@ class _PlotsState extends State<Plots> {
     final cigaretteCounter = Provider.of<CigaretteCounter>(context, listen: false);
     hourlyData.add(HourlyNicotineLevel(time: now, level: cigaretteCounter.hourlyNicotine));
     nicotineSmokedThisHour += cigaretteCounter.hourlyNicotine.toDouble();
-    print('nicotine smoked this hour: $nicotineSmokedThisHour');
+    //print('nicotine smoked this hour: $nicotineSmokedThisHour');
     cigarettesSmokedThisHour += cigaretteCounter.hourlyCigarettesSmoked;
     nicotineSmokedToday += cigaretteCounter.dailyNicotine.toDouble();
 
@@ -251,7 +249,7 @@ Widget build(BuildContext context) {
                           animate: true,
                           registrationDate: registrationDate!,
                           cigarettesPerDay: _cigarettesPerDay,
-                          nicotineSmokedToday: nicotineSmokedToday,
+                          //nicotineSmokedToday: nicotineSmokedToday,
                           dailyNicotineTarget: dailyNicotineTarget,
                         ),
                       ),
