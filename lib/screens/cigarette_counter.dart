@@ -9,6 +9,7 @@ class CigaretteCounter with ChangeNotifier {
   int _dailyCigarettesCount = 0;
   double _dailyNicotine = 0.0;
   DateTime _lastHourlyUpdate = DateTime.now();
+  DateTime _lastHourlyUpdateDays = DateTime.now();
 
   int get cigarettesSmokedToday => _cigarettesSmokedToday;
   double get nicotineSmokedToday => _nicotineSmokedToday;
@@ -81,6 +82,7 @@ class CigaretteCounter with ChangeNotifier {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     DateTime now = DateTime.now();
     DateTime lastUpdate = DateTime.parse(prefs.getString('lastHourlyUpdate') ?? now.toIso8601String());
+    DateTime lastUpdateDays = DateTime.parse(prefs.getString('lastHourlyUpdateDays') ?? now.toIso8601String());
 
     if (now.difference(lastUpdate).inHours != 0) {
       // Reset hourly counters
@@ -91,5 +93,16 @@ class CigaretteCounter with ChangeNotifier {
       await prefs.setString('lastHourlyUpdate', now.toIso8601String());
       notifyListeners();
     }
+
+    if (now.difference(lastUpdateDays).inDays != 0) {
+      // Reset hourly counters
+      _dailyCigarettesCount = 0;
+      _dailyNicotine = 0.0;
+      _lastHourlyUpdateDays = now;
+
+      await prefs.setString('lastHourlyUpdateDays', now.toIso8601String());
+      notifyListeners();
+    }
   }
+
 }
