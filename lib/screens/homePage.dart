@@ -7,7 +7,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       // Set background color of the home page
-      backgroundColor: Color.fromARGB(255, 79, 149, 240), // Light green background
+      backgroundColor: Color.fromARGB(255, 79, 149, 240),
 
       appBar: AppBar(
         title: Center(
@@ -55,9 +55,9 @@ class HomePage extends StatelessWidget {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color.fromARGB(255, 118, 174, 249),
-                  side: BorderSide(color: Color.fromARGB(255, 35, 99, 150), width: 1), // Dark edges
+                  side: BorderSide(color: Color.fromARGB(255, 35, 99, 150), width: 1),
                   textStyle: TextStyle(fontSize: 28),
-                  foregroundColor: Color.fromARGB(255, 25, 73, 113), // Dark green text color
+                  foregroundColor: Color.fromARGB(255, 25, 73, 113),
                 ),
                 child: Text('Sign up'),
                 onPressed: () {
