@@ -175,8 +175,12 @@ class _PlotsState extends State<Plots> {
     //adds data of current hour
     final cigaretteCounter = Provider.of<CigaretteCounter>(context, listen: false);
     hourlyData.add(HourlyNicotineLevel(time: now, level: cigaretteCounter.hourlyNicotine));
+    dailyData.add(HourlyNicotineLevel(time:now, level: cigaretteCounter.dailyNicotine));
+    print('hourly nicotine: ${cigaretteCounter.hourlyNicotine}');
+    ///////////////////////////////////////////////////////////////
+    ///////////RIGA SOTTO ERA +=//////////////////
     nicotineSmokedThisHour += cigaretteCounter.hourlyNicotine.toDouble();
-    //print('nicotine smoked this hour: $nicotineSmokedThisHour');
+    print('nicotineSmokedThisHour: $nicotineSmokedThisHour');
     cigarettesSmokedThisHour += cigaretteCounter.hourlyCigarettesSmoked;
     nicotineSmokedToday += cigaretteCounter.dailyNicotine.toDouble();
 
@@ -188,6 +192,8 @@ class _PlotsState extends State<Plots> {
       DateTime futureHour = now.add(Duration(hours: i));
       futureHour = DateTime(futureHour.year, futureHour.month, futureHour.day, futureHour.hour);
       hourlyData.add(HourlyNicotineLevel(time: futureHour, level: 0.0));
+      /////////VEDI SE TOGLIERE
+      dailyData.add(HourlyNicotineLevel(time: futureHour, level: 0.0));
     }
 
     //updates state w/ hourly data
