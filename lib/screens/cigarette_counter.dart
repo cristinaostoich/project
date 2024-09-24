@@ -21,8 +21,8 @@ class CigaretteCounter with ChangeNotifier {
 
   void incrementCigarettes() {
     _cigarettesSmokedToday++;
-    _dailyCigarettesCount++;
-    _hourlyCigarettesSmoked++;
+    //_dailyCigarettesCount++;
+    //_hourlyCigarettesSmoked++;
     notifyListeners();
   }
 
@@ -116,8 +116,6 @@ class CigaretteCounter with ChangeNotifier {
     await prefs.setString('hourlyData', json.encode(hourlyData));
   }
 
-
-  //////  posso togliere o questo o quello du profilePage mi sembra che sia, si chiama checkAndReset...
   Future<void> resetCountersIfNeeded() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     DateTime now = DateTime.now();
