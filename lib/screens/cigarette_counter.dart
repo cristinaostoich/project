@@ -51,6 +51,31 @@ class CigaretteCounter with ChangeNotifier {
     notifyListeners();
   }
 
+/////////////IN CASO TOGLI///////////////////////////////////////////
+ void updateTodayCount(int count) async {
+    DateTime now = DateTime.now();
+    if (now.difference(_lastHourlyUpdate).inDays == 0) {
+      _cigarettesSmokedToday = count;
+      _lastHourlyUpdate = now;
+    } else {
+      _cigarettesSmokedToday = 0;
+    }
+    notifyListeners();
+  }
+
+  void updateDailyCount(int count, double nicotine) async {
+    DateTime now = DateTime.now();
+    if (now.difference(_lastHourlyUpdate).inDays == 0) {
+      _dailyCigarettesCount = count;
+      _dailyNicotine = nicotine;
+      _lastHourlyUpdate = now;
+    } else {
+      _dailyCigarettesCount = 0;
+      _dailyNicotine = 0.0;
+    }
+    notifyListeners();
+  }
+
   void updateHourlyCount(int count, double nicotine) async {
     DateTime now = DateTime.now();
     if (now.difference(_lastHourlyUpdate).inHours == 0) {
@@ -89,19 +114,6 @@ class CigaretteCounter with ChangeNotifier {
   }
     hourlyData[key] = nicotine; // Save nicotine level
     await prefs.setString('hourlyData', json.encode(hourlyData));
-  }
-
-  void updateDailyCount(int count, double nicotine) async {
-    DateTime now = DateTime.now();
-    if (now.difference(_lastHourlyUpdate).inDays == 0) {
-      _dailyCigarettesCount = count;
-      _dailyNicotine = nicotine;
-      _lastHourlyUpdate = now;
-    } else {
-      _dailyCigarettesCount = 0;
-      _dailyNicotine = 0.0;
-    }
-    notifyListeners();
   }
 
 
