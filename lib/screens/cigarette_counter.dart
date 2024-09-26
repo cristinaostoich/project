@@ -10,19 +10,17 @@ class CigaretteCounter with ChangeNotifier {
   int _dailyCigarettesCount = 0;
   double _dailyNicotine = 0.0;
   DateTime _lastHourlyUpdate = DateTime.now();
-  DateTime _lastHourlyUpdateDays = DateTime.now();
+  //DateTime _lastHourlyUpdateDays = DateTime.now();
 
   int get cigarettesSmokedToday => _cigarettesSmokedToday;
   double get nicotineSmokedToday => _nicotineSmokedToday;
   int get hourlyCigarettesSmoked => _hourlyCigarettesSmoked;
+  double get hourlyNicotine => _hourlyNicotine;
   int get dailyCigarettesCount => _dailyCigarettesCount;
   double get dailyNicotine => _dailyNicotine;
-  double get hourlyNicotine => _hourlyNicotine;
 
   void incrementCigarettes() {
     _cigarettesSmokedToday++;
-    //_dailyCigarettesCount++;
-    //_hourlyCigarettesSmoked++;
     notifyListeners();
   }
 
@@ -31,13 +29,13 @@ class CigaretteCounter with ChangeNotifier {
     notifyListeners();
   }
 
-  void setHourlyCigarettes(int count) {
-    _hourlyCigarettesSmoked = count;
+  void setDailyCigarettes(int count) {
+    _dailyCigarettesCount = count;
     notifyListeners();
   }
 
-  void setDailyCigarettes(int count) {
-    _dailyCigarettesCount = count;
+  void setHourlyCigarettes(int count) {
+    _hourlyCigarettesSmoked = count;
     notifyListeners();
   }
 
@@ -46,19 +44,23 @@ class CigaretteCounter with ChangeNotifier {
     notifyListeners();
   }
 
-    void setDailyNicotine(double nicotine) {
+   void setDailyNicotine(double nicotine) {
       _dailyNicotine = nicotine;
     notifyListeners();
   }
 
-/////////////IN CASO TOGLI///////////////////////////////////////////
- void updateTodayCount(int count) async {
+
+  void updateHourlyCount(int count, double nicotine) async {
     DateTime now = DateTime.now();
-    if (now.difference(_lastHourlyUpdate).inDays == 0) {
-      _cigarettesSmokedToday = count;
+    if (now.difference(_lastHourlyUpdate).inHours == 0) { /////////QUI ERA != 0 MA NON HA SENSO
+      _hourlyCigarettesSmoked = count;
+      _hourlyNicotine = nicotine;
       _lastHourlyUpdate = now;
+      await _saveHourlyData(count, nicotine, now); // Save the updated hourly data
     } else {
-      _cigarettesSmokedToday = 0;
+      _hourlyCigarettesSmoked = 0;
+      _hourlyNicotine = 0.0;
+      await _saveHourlyData(0, 0.0, now); // Save the updated hourly data, qui erano (count, nicotine, now)
     }
     notifyListeners();
   }
@@ -76,22 +78,6 @@ class CigaretteCounter with ChangeNotifier {
     notifyListeners();
   }
 
-  void updateHourlyCount(int count, double nicotine) async {
-    DateTime now = DateTime.now();
-    if (now.difference(_lastHourlyUpdate).inHours == 0) {
-      _hourlyCigarettesSmoked = count;
-      _hourlyNicotine = nicotine;
-      _lastHourlyUpdate = now;
-    } else {
-      _hourlyCigarettesSmoked = 0;
-      _hourlyNicotine = 0.0;
-      await _saveHourlyData(count,nicotine,now);
-    }
-    notifyListeners();
-  }
-
-
-/////////VEDI SE CANCELLARE//////////////////////////////////
   Future<void> _saveHourlyData(int count, double nicotine, DateTime now) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String key = "${now.year}${now.month}${now.day}${now.hour}";
@@ -120,7 +106,6 @@ class CigaretteCounter with ChangeNotifier {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     DateTime now = DateTime.now();
     DateTime lastUpdate = DateTime.parse(prefs.getString('lastHourlyUpdate') ?? now.toIso8601String());
-    DateTime lastUpdateDays = DateTime.parse(prefs.getString('lastHourlyUpdateDays') ?? now.toIso8601String());
 
     if (now.difference(lastUpdate).inHours != 0) {
       // Reset hourly counters
@@ -129,16 +114,6 @@ class CigaretteCounter with ChangeNotifier {
       _lastHourlyUpdate = now;
 
       await prefs.setString('lastHourlyUpdate', now.toIso8601String());
-      notifyListeners();
-    }
-
-    if (now.difference(lastUpdateDays).inDays != 0) {
-      // Reset hourly counters
-      _dailyCigarettesCount = 0;
-      _dailyNicotine = 0.0;
-      _lastHourlyUpdateDays = now;
-
-      await prefs.setString('lastHourlyUpdateDays', now.toIso8601String());
       notifyListeners();
     }
   }
